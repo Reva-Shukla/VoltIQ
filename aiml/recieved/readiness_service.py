@@ -1,0 +1,284 @@
+import os
+import pandas as pd
+from typing import Optional, Dict, List
+from models.readiness import (
+    ReadinessRequest, 
+    ReadinessResponse, 
+    RuleBasedReadinessRequest, 
+    RuleBasedReadinessResponse, 
+    ReadinessFactorScore
+)
+from ml.utils.helpers import load_model, logger
+from ml.explainability.explainer import PerturbationExplainer
+
+class ReadinessService:
+    _instance: Optional['ReadinessService'] = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(ReadinessService, cls).__new__(cls, *args, **kwargs)
+            cls._instance.initialized = False
+        return cls._instance
+
+    def initialize(self, base_dir: str) -> None:
+        """
+        Loads electrification regression models and instantiates explainers in memory.
+        """
+        if self.initialized:
+            return
+        
+        logger.info("Initializing Electrification Readiness Service (loading models)...")
+        model_path = os.path.join(base_dir, "trained_models", "readiness_model.joblib")
+        preprocessor_path = os.path.join(base_dir, "trained_models", "readiness_preprocessor.joblib")
+        data_path = os.path.join(base_dir, "datasets", "readiness_dataset.csv")
+        
+        if not (os.path.exists(model_path) and os.path.exists(preprocessor_path)):
+            raise FileNotFoundError("Readiness model files are missing. Train the model first.")
+            
+        self.model = load_model(model_path)
+        self.preprocessor = load_model(preprocessor_path)
+        
+        if not os.path.exists(data_path):
+            raise FileNotFoundError(f"Readiness dataset missing at {data_path}")
+        self.baseline_data = pd.read_csv(data_path).drop(columns=['suitability_score'], errors='ignore')
+        
+        self.explainer = PerturbationExplainer(
+            model=self.model,
+            preprocessor=self.preprocessor,
+            baseline_data=self.baseline_data,
+            predict_fn=self.model.predict
+        )
+        self.initialized = True
+        logger.info("Electrification Readiness Service initialized successfully.")
+
+    def calculate_savings(self, request: ReadinessRequest) -> float:
+        """
+        Performs a business cost analysis comparing ICE costs to EV costs.
+        EV savings are route-dependent (urban benefits from high regen braking efficiency).
+        """
+        fuel_cost = request.annual_fuel_cost_usd
+        maint_cost = request.annual_maintenance_cost_usd
+        route = request.route_type
+        
+        # EV fuel (electricity) cost factor compared to ICE fuel
+        if route == 'urban':
+            ev_fuel_factor = 0.22  # 78% cheaper due to stop-and-go regenerative braking
+        elif route == 'mixed':
+            ev_fuel_factor = 0.28  # 72% cheaper
+        else: # highway
+            ev_fuel_factor = 0.36  # 64% cheaper (less regen contribution)
+            
+        # EV maintenance cost factor (EVs have ~55% lower maintenance costs due to fewer moving parts)
+        ev_maint_factor = 0.45 
+        
+        ev_annual_fuel_cost = fuel_cost * ev_fuel_factor
+        ev_annual_maint_cost = maint_cost * ev_maint_factor
+        
+        savings = (fuel_cost - ev_annual_fuel_cost) + (maint_cost - ev_annual_maint_cost)
+        return round(float(savings), 2)
+
+    def predict(self, request: ReadinessRequest) -> ReadinessResponse:
+        """
+        Runs preprocessor, predicts suitability score (0-100), estimates savings, and explains predictions.
+        """
+        if not self.initialized:
+            raise RuntimeError("Electrification Readiness Service has not been initialized.")
+            
+        # Convert request to pandas DataFrame
+        input_dict = request.model_dump()
+        sample_df = pd.DataFrame([input_dict])
+        
+        # Run explainability engine
+        explanation_result = self.explainer.explain(sample_df)
+        
+        # Calculate financial savings
+        estimated_savings = self.calculate_savings(request)
+        
+        return ReadinessResponse(
+            predicted_suitability_score=explanation_result["prediction"],
+            baseline_suitability_score=explanation_result["baseline_prediction"],
+            suitability_difference=explanation_result["prediction_difference"],
+            estimated_annual_savings_usd=estimated_savings,
+            explanations=explanation_result["explanations"]
+        )
+
+    def evaluate_rule_based_readiness(self, request: RuleBasedReadinessRequest) -> RuleBasedReadinessResponse:
+        """
+        Rule-based Electrification Readiness Engine. Calculates scores, assigns categories,
+        and generates structured/natural language explanations of point allocations.
+        """
+        # Default Configurable Weights
+        default_weights = {
+            "daily_distance": 0.30,
+            "charging_infrastructure": 0.20,
+            "economic_savings": 0.20,
+            "operating_environment": 0.15,
+            "asset_lifecycle": 0.15
+        }
+        
+        # Merge and self-normalize weights
+        user_weights = request.weights or {}
+        merged_weights = {k: float(user_weights.get(k, default_weights[k])) for k in default_weights}
+        total_w = sum(merged_weights.values())
+        if total_w <= 0.0:
+            merged_weights = default_weights
+            total_w = 1.0
+        normalized_weights = {k: v / total_w for k, v in merged_weights.items()}
+        
+        factor_breakdown: List[ReadinessFactorScore] = []
+        
+        # 1. Daily Distance Suitability (0-100)
+        dist = request.daily_route_distance
+        if dist <= 140.0:
+            dist_score = 100.0
+            dist_expl = f"Daily route distance of {dist:.1f} km is well within standard EV range, requiring no mid-day charging."
+        elif dist <= 260.0:
+            dist_score = 80.0
+            dist_expl = f"Daily route distance of {dist:.1f} km is suitable, but may require overnight depot chargers."
+        elif dist <= 360.0:
+            dist_score = 50.0
+            dist_expl = f"Daily route distance of {dist:.1f} km is close to typical EV range limits, requiring careful route scheduling."
+        else:
+            dist_score = 10.0
+            dist_expl = f"Daily route distance of {dist:.1f} km exceeds standard single-charge EV range, posing range risks."
+            
+        w_dist = normalized_weights["daily_distance"]
+        factor_breakdown.append(ReadinessFactorScore(
+            factor="Daily Distance Suitability",
+            score=dist_score,
+            weight=w_dist,
+            contribution=round(dist_score * w_dist, 2),
+            explanation=dist_expl
+        ))
+        
+        # 2. Charging Infrastructure Availability (0-100)
+        infra = request.charging_infrastructure
+        if infra == "Available":
+            infra_score = 100.0
+            infra_expl = "Grid charging infrastructure is already active and available."
+        elif infra == "Planned":
+            infra_score = 60.0
+            infra_expl = "Grid charging infrastructure is planned or scheduled, reducing long-term deployment barriers."
+        else:
+            infra_score = 10.0
+            infra_expl = "No charging infrastructure available, representing a high deployment barrier."
+            
+        w_infra = normalized_weights["charging_infrastructure"]
+        factor_breakdown.append(ReadinessFactorScore(
+            factor="Charging Infrastructure Availability",
+            score=infra_score,
+            weight=w_infra,
+            contribution=round(infra_score * w_infra, 2),
+            explanation=infra_expl
+        ))
+        
+        # 3. Economic Potential / Savings (0-100)
+        # Higher current ICE costs = higher incentive to switch to EV
+        fuel = request.fuel_consumption
+        maint = request.maintenance_cost
+        
+        fuel_score = 100.0 if fuel > 16.0 else (75.0 if fuel >= 11.0 else 40.0)
+        maint_score = 100.0 if maint > 4000.0 else (70.0 if maint >= 1800.0 else 40.0)
+        econ_score = (fuel_score * 0.6) + (maint_score * 0.4)
+        econ_expl = f"High potential savings due to fuel consumption of {fuel:.1f} L/100km and annual maintenance cost of ${maint:.2f}."
+        
+        w_econ = normalized_weights["economic_savings"]
+        factor_breakdown.append(ReadinessFactorScore(
+            factor="Economic Savings Potential",
+            score=econ_score,
+            weight=w_econ,
+            contribution=round(econ_score * w_econ, 2),
+            explanation=econ_expl
+        ))
+        
+        # 4. Operating Environment Stress (0-100)
+        region = request.operating_region
+        terrain = request.terrain
+        weather = request.weather
+        
+        region_base = 100.0 if region == 'Urban' else (80.0 if region == 'Mixed' else 40.0)
+        terrain_penalty = 1.0 if terrain == 'Flat' else (0.8 if terrain == 'Hilly' else 0.5)
+        weather_penalty = 1.0 if weather == 'Mild' else (0.75 if weather == 'Cold' else 0.5)
+        env_score = region_base * terrain_penalty * weather_penalty
+        
+        env_expl = f"Operating region is {region} (base score: {region_base}), adjusted for terrain ({terrain}) and weather ({weather}) factors."
+        
+        w_env = normalized_weights["operating_environment"]
+        factor_breakdown.append(ReadinessFactorScore(
+            factor="Operating Environment Stress",
+            score=env_score,
+            weight=w_env,
+            contribution=round(env_score * w_env, 2),
+            explanation=env_expl
+        ))
+        
+        # 5. Asset Lifecycle / Replacement Priority (0-100)
+        # Older/worn out vehicles are better replacement candidates immediately
+        age = request.vehicle_age
+        mileage = request.mileage
+        
+        if age > 7.0 or mileage > 220000.0:
+            lifecycle_score = 100.0
+            lifecycle_expl = "Asset is near end of lifecycle; high priority for replacement."
+        elif age >= 4.0 or mileage >= 100000.0:
+            lifecycle_score = 75.0
+            lifecycle_expl = "Asset is mid-lifecycle; candidate for scheduled transition."
+        else:
+            lifecycle_score = 35.0
+            lifecycle_expl = "Asset is relatively new; low capital replacement urgency."
+            
+        w_life = normalized_weights["asset_lifecycle"]
+        factor_breakdown.append(ReadinessFactorScore(
+            factor="Asset Replacement Priority",
+            score=lifecycle_score,
+            weight=w_life,
+            contribution=round(lifecycle_score * w_life, 2),
+            explanation=lifecycle_expl
+        ))
+        
+        # Calculate final aggregated score
+        readiness_score = sum(f.contribution for f in factor_breakdown)
+        readiness_score = round(max(0.0, min(100.0, readiness_score)), 1)
+        
+        # Category Assignment
+        if readiness_score >= 80.0:
+            category = "Ready"
+        elif readiness_score >= 60.0:
+            category = "Moderately Ready"
+        elif readiness_score >= 40.0:
+            category = "Needs Review"
+        else:
+            category = "Not Recommended"
+            
+        # Build natural language narrative explanation
+        # Sort factors by their contribution score to explain why it scored this way
+        top_positive = [f for f in factor_breakdown if f.score >= 70.0]
+        top_positive.sort(key=lambda x: x.contribution, reverse=True)
+        
+        top_negative = [f for f in factor_breakdown if f.score < 50.0]
+        top_negative.sort(key=lambda x: x.contribution)
+        
+        narrative_parts = [
+            f"Vehicle achieves a readiness score of {readiness_score:.1f}/100, placing it in the '{category}' category."
+        ]
+        
+        if top_positive:
+            pos_phrases = []
+            for f in top_positive[:2]:
+                pos_phrases.append(f"{f.factor.lower()} (+{f.contribution:.1f} points)")
+            narrative_parts.append("Positive readiness drivers include " + " and ".join(pos_phrases) + ".")
+            
+        if top_negative:
+            neg_phrases = []
+            for f in top_negative[:2]:
+                neg_phrases.append(f"{f.factor.lower()} (+{f.contribution:.1f} points, blocker)")
+            narrative_parts.append("Primary suitability barriers are " + " and ".join(neg_phrases) + ".")
+            
+        explanation = " ".join(narrative_parts)
+        
+        return RuleBasedReadinessResponse(
+            readiness_score=readiness_score,
+            category=category,
+            explanation=explanation,
+            factor_breakdown=factor_breakdown
+        )

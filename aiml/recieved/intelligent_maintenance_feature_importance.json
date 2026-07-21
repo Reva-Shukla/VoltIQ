@@ -1,0 +1,11 @@
+{
+    "downtime": 0.22602276873116733,
+    "battery_health": 0.18801218345896106,
+    "engine_hours": 0.1693476717715477,
+    "mileage": 0.15706642556641665,
+    "vehicle_age": 0.14441961137439185,
+    "maintenance_frequency": 0.05332705097159896,
+    "operating_conditions_Extreme": 0.03172271921488287,
+    "operating_conditions_Normal": 0.019429514532494932,
+    "operating_conditions_Severe": 0.010652054378538736
+}

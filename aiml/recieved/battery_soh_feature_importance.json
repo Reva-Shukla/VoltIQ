@@ -1,0 +1,9 @@
+{
+    "voltage_drop_v": 0.48965811148853416,
+    "internal_resistance_ohm": 0.47942379844230765,
+    "capacity_throughput_kwh": 0.012721696280146985,
+    "charge_cycles": 0.006346871489637164,
+    "discharge_rate_c": 0.006093276257711846,
+    "avg_temp_c": 0.0032749872438300773,
+    "max_temp_c": 0.0024812587978322253
+}

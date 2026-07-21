@@ -1,0 +1,24 @@
+{
+    "soh": {
+        "capacity": 0.9999735852154218,
+        "capacity_fade_rate": 5.559604217881752e-06,
+        "voltage": 4.612574227531573e-06,
+        "current": 4.10863245907896e-06,
+        "cycle_count": 2.9621355890223856e-06,
+        "internal_resistance": 2.829123956796564e-06,
+        "temperature": 2.2771839751443386e-06,
+        "resistance_increase_ratio": 2.160769013998812e-06,
+        "temp_voltage_ratio": 1.9047611387838064e-06
+    },
+    "rul": {
+        "capacity": 0.9709441555702347,
+        "capacity_fade_rate": 0.00799597343130152,
+        "internal_resistance": 0.004042377389789665,
+        "resistance_increase_ratio": 0.003883577887781108,
+        "temperature": 0.0029818742511866533,
+        "voltage": 0.002885019905088223,
+        "current": 0.002616155676989841,
+        "temp_voltage_ratio": 0.0026077410285930067,
+        "cycle_count": 0.0020431248590353497
+    }
+}

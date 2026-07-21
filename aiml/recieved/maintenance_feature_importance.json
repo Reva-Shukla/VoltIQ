@@ -1,0 +1,10 @@
+{
+    "coolant_temp_c": 0.21655373953002685,
+    "vibration_amplitude_mm": 0.21060895683118652,
+    "motor_temp_c": 0.13188042791409024,
+    "battery_temp_c": 0.12472798511813638,
+    "mileage_km": 0.0822146717975841,
+    "average_speed_kmh": 0.08214484038396497,
+    "brake_wear_index": 0.07825861987846029,
+    "vehicle_age_months": 0.07361075854655075
+}

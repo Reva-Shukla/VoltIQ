@@ -1,0 +1,11 @@
+{
+    "route_type_highway": 0.33929416382995575,
+    "daily_distance_km": 0.2322983597406582,
+    "depot_grid_capacity_kw": 0.19859464860800177,
+    "annual_fuel_cost_usd": 0.06792035193732228,
+    "charger_availability_on_route": 0.062377915702512575,
+    "annual_maintenance_cost_usd": 0.029871527032380694,
+    "max_payload_kg": 0.024494540428310122,
+    "route_type_mixed": 0.023929241467619496,
+    "route_type_urban": 0.021219251253239216
+}

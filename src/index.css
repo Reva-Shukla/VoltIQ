@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #081A3A;
+    color: #F8FAFC;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+/* Glassmorphism & Custom Styling */
+.glass-panel {
+  background: rgba(16, 38, 79, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(38, 215, 231, 0.15);
+}
+
+.glass-card {
+  background: rgba(16, 38, 79, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(38, 215, 231, 0.12);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(16, 38, 79, 0.75);
+  border-color: rgba(38, 215, 231, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(38, 215, 231, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Glow Utilities */
+.text-cyan-glow {
+  text-shadow: 0 0 15px rgba(38, 215, 231, 0.5);
+}
+
+.shadow-cyan-glow {
+  box-shadow: 0 0 25px rgba(38, 215, 231, 0.2);
+}
+
+/* Breathing Battery Pulse Animation */
+@keyframes batteryPulse {
+  0%, 100% {
+    opacity: 0.65;
+    box-shadow: 0 0 20px rgba(38, 215, 231, 0.25);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 45px rgba(38, 215, 231, 0.65);
+  }
+}
+
+.animate-battery-pulse {
+  animation: batteryPulse 3.5s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #081A3A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #18346B;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #26D7E7;
+}
