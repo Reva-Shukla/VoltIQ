@@ -1,32 +1,46 @@
-# React + TypeScript + Vite
+# VoltIQ
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**Intelligence Behind Every Electric Mile.**
 
-Currently, two official plugins are available:
+VoltIQ is an AI-powered EV Fleet Intelligence platform developed for the Economic Times AI Hackathon 2026.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Battery State of Health (SOH) Prediction
+- Remaining Useful Life (RUL) Estimation
+- Predictive Maintenance Intelligence
+- Fleet Readiness Analysis
+- Explainable AI Insights
+- Interactive North India Fleet Dashboard
+- FastAPI Backend
+- React + TypeScript Frontend
+- Responsive Premium UI
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+### Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Framer Motion
+- Recharts
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Backend
+- FastAPI
+- Python
+- Scikit-Learn
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+### Machine Learning
+- Battery Health Prediction
+- Predictive Maintenance Models
+- Fleet Intelligence
+- Explainable AI
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Team Ctrl Freaks
+
+- **Reva Shukla** — Frontend Developer, UI/UX Designer & Product Design
+- **Tanishqa Bhagat** — AI/ML Engineer
+- **Jiya Anand** — Backend Developer
+
+Developed for the **Economic Times AI Hackathon 2026**.
