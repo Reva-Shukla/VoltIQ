@@ -1,46 +1,80 @@
-# VoltIQ
+# ⚡ VoltIQ
 
-**Intelligence Behind Every Electric Mile.**
+### Intelligence Behind Every Electric Mile.
 
-VoltIQ is an AI-powered EV Fleet Intelligence platform developed for the Economic Times AI Hackathon 2026.
+**VoltIQ** is an AI-powered EV Fleet Intelligence platform designed to help fleet operators monitor battery health, predict maintenance needs, evaluate fleet readiness, and make data-driven decisions.
 
-## Features
+Built for the **Economic Times AI Hackathon 2026** by **Team Ctrl Freaks**.
 
-- Battery State of Health (SOH) Prediction
-- Remaining Useful Life (RUL) Estimation
-- Predictive Maintenance Intelligence
-- Fleet Readiness Analysis
-- Explainable AI Insights
-- Interactive North India Fleet Dashboard
-- FastAPI Backend
-- React + TypeScript Frontend
-- Responsive Premium UI
+---
 
-## Tech Stack
+## 🚗 The Problem
+
+EV fleets generate large amounts of battery and vehicle data, but turning that data into actionable decisions can be difficult.
+
+VoltIQ brings **battery health, predictive maintenance, fleet readiness, alerts, analytics, and AI-driven recommendations** together in one platform.
+
+---
+
+## ✨ Key Features
+
+* 🔋 **Battery Health Prediction** — Monitor and predict battery State of Health (SOH).
+* ⏳ **RUL Estimation** — Estimate Remaining Useful Life and visualize degradation.
+* 🛠️ **Predictive Maintenance** — Identify vehicles that may require maintenance.
+* 🚦 **Fleet Readiness** — Evaluate the operational readiness of vehicles and fleets.
+* 🤖 **AI Insights** — Generate actionable and explainable recommendations.
+* 🗺️ **Interactive Dashboard** — View fleet KPIs, vehicle locations, alerts, and health metrics.
+* 📊 **Analytics** — Visualize battery degradation and fleet-level trends.
+* 📥 **Data Export** — Export fleet information for further analysis.
+
+---
+
+## 🧠 How It Works
+
+```text
+Vehicle / Battery Data
+        ↓
+   FastAPI Backend
+        ↓
+ AI / ML Predictions
+        ↓
+ Fleet Intelligence
+        ↓
+ React Dashboard
+        ↓
+ Actionable Insights
+```
+
+The frontend communicates with dedicated backend APIs for battery prediction, fleet analysis, maintenance intelligence, and readiness scoring.
+
+> The current dashboard uses structured demo fleet telemetry to demonstrate the complete product experience, while the backend provides integration points for predictive services.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- Framer Motion
-- Recharts
 
-### Backend
-- FastAPI
-- Python
-- Scikit-Learn
+* React + TypeScript
+* Vite
+* Tailwind CSS
+* React Router
+* Recharts
+* Framer Motion
+* React Hook Form + Zod
+* Lucide React
 
-### Machine Learning
-- Battery Health Prediction
-- Predictive Maintenance Models
-- Fleet Intelligence
-- Explainable AI
+### Backend & AI/ML
 
-## Team Ctrl Freaks
+* Python
+* FastAPI
+* Scikit-learn
 
-- **Reva Shukla** — Frontend Developer, UI/UX Designer & Product Design
-- **Tanishqa Bhagat** — AI/ML Engineer
-- **Jiya Anand** — Backend Developer
+---
 
-Developed for the **Economic Times AI Hackathon 2026**.
+## 📁 Project Structure
+
+```text
+VoltIQ/
+├── aim
+```
